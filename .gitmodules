@@ -1,0 +1,3 @@
+[submodule "hardware/mega2560pro-library"]
+	path = hardware/mega2560pro-library
+	url = https://github.com/evo2000/mega2560pro-library.git
