@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "mega2560pro")(type "KiCad")(uri "${KIPRJMOD}/mega2560pro-library/mega2560pro.kicad_sym")(options "")(descr ""))
+)
