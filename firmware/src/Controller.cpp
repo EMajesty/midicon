@@ -8,7 +8,13 @@ constexpr uint8_t COL[4] = {24, 26, 28, 30}, ROW[4] = {41, 43, 45, 47},
                   AP[8] = {A0, A2, A4, A6, A8, A10, A12, A14};
 // Joystick 2 (A12/A14) is intentionally disabled until it is connected.
 constexpr uint8_t ACTIVE_ANALOG_COUNT = 6;
-constexpr int8_t QT[16] = {0, -1, 1, 0, 1, 0, 0, -1, -1, 0, 0, 1, 0, 1, -1, 0};
+// Ben Buxton-style full-step Gray-code decoder. State changes caused by contact
+// bounce cannot produce an event unless the encoder completes a valid cycle.
+constexpr uint8_t DIR_CW = 0x10, DIR_CCW = 0x20;
+constexpr uint8_t ENCODER_TABLE[7][4] = {
+    {0, 2, 4, 0}, {3, 0, 1, DIR_CW},  {3, 2, 0, 0}, {3, 2, 1, 0},
+    {6, 0, 4, 0}, {6, 5, 0, DIR_CCW}, {6, 5, 4, 0},
+};
 Controller::Controller()
     : lcd_(36, 38, 40, 42, 44, 46), leds_(4, 32, NEO_RGB + NEO_KHZ800) {}
 bool Controller::Debounce::update(bool v, uint32_t n) {
@@ -32,7 +38,7 @@ void Controller::begin() {
         pinMode(EB[i], INPUT_PULLUP);
         pinMode(EP[i], INPUT_PULLUP);
         pinMode(FP[i], INPUT_PULLUP);
-        encState_[i] = (digitalRead(EA[i]) << 1) | digitalRead(EB[i]);
+        encoderDecoderState_[i] = 0;
     }
     for (uint8_t i = 0; i < 4; i++) {
         pinMode(COL[i], INPUT_PULLUP);
@@ -69,13 +75,13 @@ void Controller::tick() {
 }
 void Controller::scan(uint32_t n) {
     for (uint8_t i = 0; i < 4; i++) {
-        uint8_t c = (digitalRead(EA[i]) << 1) | digitalRead(EB[i]);
-        encAccum_[i] += QT[(encState_[i] << 2) | c];
-        encState_[i] = c;
-        if (abs(encAccum_[i]) >= 4) {
-            encoderEvent(i, encAccum_[i] > 0 ? 1 : -1);
-            encAccum_[i] = 0;
-        }
+        uint8_t pins = (digitalRead(EA[i]) << 1) | digitalRead(EB[i]);
+        uint8_t result = ENCODER_TABLE[encoderDecoderState_[i] & 0x0F][pins];
+        encoderDecoderState_[i] = result & 0x0F;
+        if (result & DIR_CW)
+            encoderEvent(i, 1);
+        else if (result & DIR_CCW)
+            encoderEvent(i, -1);
         if (encPb_[i].update(digitalRead(EP[i]), n))
             encoderButton(i, !encPb_[i].stable);
         if (functions_[i].update(digitalRead(FP[i]), n))

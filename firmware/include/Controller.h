@@ -32,9 +32,8 @@ class Controller {
     LiquidCrystal lcd_;
     Adafruit_NeoPixel leds_;
     Debounce matrix_[16], encPb_[4], functions_[4];
-    uint8_t encState_[4]{}, functionOwner_ = 255;
+    uint8_t encoderDecoderState_[4]{}, functionOwner_ = 255;
     bool functionConsumed_ = false, shiftOnly_[16]{};
-    int8_t encAccum_[4]{};
     uint16_t raw_[8]{}, filtered_[8]{}, logical_[4][12]{};
     bool pickup_[4][4]{};
     uint8_t pickupLast_[4][4]{};
