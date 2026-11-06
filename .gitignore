@@ -38,3 +38,8 @@ fp-info-cache
 
 # Local project settings
 *.kicad_prl
+
+# PlatformIO and editor-generated files
+.pio-core/
+firmware/.pio/
+firmware/compile_commands.json

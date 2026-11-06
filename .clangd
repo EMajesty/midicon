@@ -1,0 +1,16 @@
+CompileFlags:
+  Remove:
+    - -mmcu=*
+    - -flto
+    - -fno-fat-lto-objects
+    - -fuse-linker-plugin
+  Add:
+    - -D__AVR_ATmega2560__
+    - -I../.pio-core/packages/toolchain-atmelavr/avr/include
+  Compiler: clang++
+
+Diagnostics:
+  UnusedIncludes: None
+  Suppress:
+    - asm_invalid_input_constraint
+    - asm_invalid_output_constraint
