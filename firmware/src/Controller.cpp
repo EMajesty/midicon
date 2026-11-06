@@ -6,6 +6,8 @@ constexpr uint8_t EA[4] = {5, 11, 17, 25}, EB[4] = {7, 13, 21, 27},
                   EP[4] = {3, 9, 15, 23}, FP[4] = {33, 35, 37, 39};
 constexpr uint8_t COL[4] = {24, 26, 28, 30}, ROW[4] = {41, 43, 45, 47},
                   AP[8] = {A0, A2, A4, A6, A8, A10, A12, A14};
+// Joystick 2 (A12/A14) is intentionally disabled until it is connected.
+constexpr uint8_t ACTIVE_ANALOG_COUNT = 6;
 constexpr int8_t QT[16] = {0, -1, 1, 0, 1, 0, 0, -1, -1, 0, 0, 1, 0, 1, -1, 0};
 Controller::Controller()
     : lcd_(36, 38, 40, 42, 44, 46), leds_(4, 32, NEO_RGB + NEO_KHZ800) {}
@@ -36,7 +38,7 @@ void Controller::begin() {
         pinMode(COL[i], INPUT_PULLUP);
         pinMode(ROW[i], INPUT);
     }
-    for (uint8_t i = 0; i < 8; i++)
+    for (uint8_t i = 0; i < ACTIVE_ANALOG_COUNT; i++)
         raw_[i] = filtered_[i] = analogRead(AP[i]);
     for (uint8_t p = 0; p < 4; ++p) {
         for (uint8_t e = 0; e < 4; ++e)
@@ -143,7 +145,7 @@ void Controller::functionEvent(uint8_t i, bool down) {
             if (calibrationIndex_ >= 4)
                 config_.analog[calibrationIndex_].center =
                     raw_[calibrationIndex_];
-            if (++calibrationIndex_ >= 8) {
+            if (++calibrationIndex_ >= ACTIVE_ANALOG_COUNT) {
                 if (validate(config_)) {
                     dirty_ = true;
                     mode_ = Mode::System;
@@ -223,7 +225,8 @@ void Controller::encoderEvent(uint8_t i, int8_t d) {
     } else if (mode_ == Mode::AssignEdit)
         assignmentAdjust(i, d);
     else if (mode_ == Mode::Calibration && i == 0) {
-        calibrationIndex_ = (calibrationIndex_ + d + 8) % 8;
+        calibrationIndex_ =
+            (calibrationIndex_ + d + ACTIVE_ANALOG_COUNT) % ACTIVE_ANALOG_COUNT;
         render(millis(), true);
     } else if (mode_ == Mode::Performance && functionOwner_ == 255)
         dispatchEncoder(i, d);
@@ -291,7 +294,7 @@ void Controller::analog(uint32_t n) {
     if (n - at < 5)
         return;
     at = n;
-    for (uint8_t i = 0; i < 8; i++) {
+    for (uint8_t i = 0; i < ACTIVE_ANALOG_COUNT; i++) {
         uint16_t v = analogRead(AP[i]);
         filtered_[i] = (filtered_[i] * 3 + v) / 4;
         int delta = abs(int(filtered_[i]) - int(raw_[i]));
@@ -437,9 +440,9 @@ void Controller::systemAccept() {
         }
     } else if (systemItem_ == 2) {
         memcpy(calibrationBackup_, config_.analog, sizeof(calibrationBackup_));
-        for (Calibration &cal : config_.analog) {
-            cal.minimum = 1023;
-            cal.maximum = 0;
+        for (uint8_t i = 0; i < ACTIVE_ANALOG_COUNT; ++i) {
+            config_.analog[i].minimum = 1023;
+            config_.analog[i].maximum = 0;
         }
         calibrationIndex_ = 0;
         mode_ = Mode::Calibration;
@@ -467,15 +470,16 @@ void Controller::assignmentAdjust(uint8_t e, int8_t d) {
 void Controller::ledRender() {
     uint32_t off = leds_.Color(0, 0, 0), green = leds_.Color(0, 80, 0),
              amber = leds_.Color(60, 20, 0), red = leds_.Color(80, 0, 0);
+    auto physicalLed = [](uint8_t logical) { return uint8_t(3 - logical); };
     for (uint8_t i = 0; i < 4; i++)
         leds_.setPixelColor(i, off);
     if (mode_ == Mode::Performance)
-        leds_.setPixelColor(page_, leds_.Color(0, 0, 80));
+        leds_.setPixelColor(physicalLed(page_), leds_.Color(0, 0, 80));
     else {
-        leds_.setPixelColor(0, green);
-        leds_.setPixelColor(3, amber);
+        leds_.setPixelColor(physicalLed(0), green);
+        leds_.setPixelColor(physicalLed(3), amber);
         if (mode_ == Mode::AssignEdit || mode_ == Mode::LoadConfirm)
-            leds_.setPixelColor(1, red);
+            leds_.setPixelColor(physicalLed(1), red);
     }
     leds_.show();
 }
