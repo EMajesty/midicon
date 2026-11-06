@@ -38,6 +38,12 @@ void Controller::begin() {
     }
     for (uint8_t i = 0; i < 8; i++)
         raw_[i] = filtered_[i] = analogRead(AP[i]);
+    for (uint8_t p = 0; p < 4; ++p) {
+        for (uint8_t e = 0; e < 4; ++e)
+            logical_[p][e] = config_.mappings[p][16 + e].initial;
+        for (uint8_t a = 0; a < 8; ++a)
+            logical_[p][4 + a] = config_.mappings[p][24 + a].initial;
+    }
     lcd_.begin(20, 2);
     leds_.begin();
     leds_.setBrightness(32);
@@ -268,8 +274,16 @@ void Controller::dispatchEncoder(uint8_t i, int8_t d) {
 }
 uint8_t Controller::scaled(uint8_t i, uint16_t v) const {
     auto &a = config_.analog[i];
-    long x =
-        map(constrain(v, a.minimum, a.maximum), a.minimum, a.maximum, 0, 127);
+    v = constrain(v, a.minimum, a.maximum);
+    long x;
+    if (i >= 4) {
+        if (abs(int(v) - int(a.center)) <= 8)
+            return 64;
+        x = v < a.center ? map(v, a.minimum, a.center, 0, 64)
+                         : map(v, a.center, a.maximum, 64, 127);
+    } else {
+        x = map(v, a.minimum, a.maximum, 0, 127);
+    }
     return constrain(x, 0, 127);
 }
 void Controller::analog(uint32_t n) {
