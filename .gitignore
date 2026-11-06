@@ -43,3 +43,4 @@ fp-info-cache
 .pio-core/
 firmware/.pio/
 firmware/compile_commands.json
+.direnv/
