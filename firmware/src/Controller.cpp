@@ -90,6 +90,7 @@ void Controller::functionEvent(uint8_t i, bool down) {
         if (functionOwner_ == 255) {
             functionOwner_ = i;
             functionConsumed_ = false;
+            releaseNotes();
         }
         return;
     }
@@ -134,19 +135,31 @@ void Controller::functionEvent(uint8_t i, bool down) {
     } else if (mode_ == Mode::Calibration) {
         if (i == 0) {
             if (calibrationIndex_ >= 4)
-                config_.analog[calibrationIndex_].center = raw_[calibrationIndex_];
+                config_.analog[calibrationIndex_].center =
+                    raw_[calibrationIndex_];
             if (++calibrationIndex_ >= 8) {
                 if (validate(config_)) {
                     dirty_ = true;
                     mode_ = Mode::System;
                 } else {
-                    memcpy(config_.analog, calibrationBackup_, sizeof(calibrationBackup_));
+                    memcpy(config_.analog, calibrationBackup_,
+                           sizeof(calibrationBackup_));
                     show("CALIBRATION ERROR");
                 }
             }
         } else if (i == 1 || i == 3) {
-            memcpy(config_.analog, calibrationBackup_, sizeof(calibrationBackup_));
+            memcpy(config_.analog, calibrationBackup_,
+                   sizeof(calibrationBackup_));
             mode_ = Mode::System;
+        }
+    }
+    if (mode_ == Mode::Performance) {
+        for (uint8_t f = 0; f < 4; ++f) {
+            uint8_t physical = scaled(f, filtered_[f]);
+            pickupLast_[page_][f] = physical;
+            pickup_[page_][f] =
+                abs(int(physical) - int(logical_[page_][4 + f])) >
+                config_.pickupTolerance;
         }
     }
     functionOwner_ = 255;
@@ -218,6 +231,8 @@ void Controller::dispatchButton(uint8_t idx, bool down) {
         toggle_[page_][idx] = !toggle_[page_][idx];
         fire = toggle_[page_][idx];
     }
+    if (m.behavior == 2 && !down)
+        return;
     if (m.behavior == 3 && !down)
         return;
     uint8_t st = (m.channel - 1) & 15;
@@ -293,7 +308,11 @@ void Controller::dispatchAnalog(uint8_t i, uint8_t v) {
         return;
     if (i < 4 && pickup_[page_][i]) {
         int target = logical_[page_][4 + i];
-        if (abs(int(v) - target) > config_.pickupTolerance) {
+        uint8_t previous = pickupLast_[page_][i];
+        pickupLast_[page_][i] = v;
+        bool crossed = (previous <= target && v >= target) ||
+                       (previous >= target && v <= target);
+        if (!crossed && abs(int(v) - target) > config_.pickupTolerance) {
             snprintf(lower_, 21, "FDR%02u PICKUP %03u", i + 1, target);
             return;
         }
@@ -318,8 +337,10 @@ void Controller::changePage(uint8_t p) {
         return;
     releaseNotes();
     page_ = p;
-    for (uint8_t i = 0; i < 4; i++)
+    for (uint8_t i = 0; i < 4; i++) {
         pickup_[p][i] = true;
+        pickupLast_[p][i] = scaled(i, filtered_[i]);
+    }
     strcpy(lower_, "PAGE CHANGED");
 }
 void Controller::releaseNotes() {
@@ -487,6 +508,11 @@ void Controller::render(uint32_t n, bool force) {
         strncpy(a, message_, 20);
         strcpy(b, "PLEASE WAIT");
     }
+    for (uint8_t i = strlen(a); i < 20; ++i)
+        a[i] = ' ';
+    for (uint8_t i = strlen(b); i < 20; ++i)
+        b[i] = ' ';
+    a[20] = b[20] = 0;
     lcd_.setCursor(0, 0);
     lcd_.print(a);
     lcd_.setCursor(0, 1);

@@ -37,6 +37,7 @@ class Controller {
     int8_t encAccum_[4]{};
     uint16_t raw_[8]{}, filtered_[8]{}, logical_[4][8]{};
     bool pickup_[4][4]{};
+    uint8_t pickupLast_[4][4]{};
     bool toggle_[4][24]{}, noteHeld_[16]{}, transport_ = false;
     uint32_t clockAt_ = 0, lastClock_ = 0, lastUi_ = 0;
     float bpm_ = 0;
