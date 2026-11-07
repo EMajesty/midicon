@@ -8107,7 +8107,7 @@
 	)
 	(global_label "E2_B"
 		(shape input)
-		(at 29.21 63.5 180)
+		(at 29.21 66.04 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -8117,7 +8117,7 @@
 		)
 		(uuid "c3ce330f-f02d-4855-9d5e-d7d96cabe86a")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 21.6287 63.5 0)
+			(at 21.6287 66.04 0)
 			(effects
 				(font
 					(size 1.27 1.27)

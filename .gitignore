@@ -44,3 +44,10 @@ fp-info-cache
 firmware/.pio/
 firmware/compile_commands.json
 .direnv/
+
+# Python generated files and virtual environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/

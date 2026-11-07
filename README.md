@@ -12,7 +12,7 @@ Logic voltage: 5 V
 | D7 | E1_B | Encoder 1 channel B |
 | D9 | E2_PB | Encoder 2 push button |
 | D11 | E2_A | Encoder 2 channel A |
-| D13 | E2_B | Encoder 2 channel B |
+| D14 | E2_B | Encoder 2 channel B |
 | D15 | E3_PB | Encoder 3 push button |
 | D17 | E3_A | Encoder 3 channel A |
 | D18 | MIDI_OUT | MIDI output (TX1) |
@@ -211,3 +211,17 @@ Firmware:
 | C1 | Output decoupling |
 
 The +5 V rail supplies the MCU, controls, LCD, MIDI circuitry and LEDs.
+
+## Firmware and configurator
+
+The v1 firmware is a standalone, four-page configurable MIDI controller. Build it with `pio run -d firmware`; see [firmware/README.md](firmware/README.md) for operation, EEPROM layout, MIDI conventions, and the USB protocol.
+
+The native Python configurator provides JSON validation/import/export, device upload/download, explicit EEPROM save/reload, and a PySide6 GUI:
+
+```sh
+python -m pip install -r requirements.txt
+python -m configurator validate config/default.json
+python -m configurator gui
+```
+
+See [configurator/README.md](configurator/README.md) for all commands and [docs/hardware-test-checklist.md](docs/hardware-test-checklist.md) for physical verification.
