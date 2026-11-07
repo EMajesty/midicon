@@ -112,7 +112,10 @@ void Controller::functionEvent(uint8_t i, bool down) {
         return;
     if (mode_ == Mode::Performance && !functionConsumed_)
         changePage(i);
-    else if (mode_ == Mode::System) {
+    // Releasing the function button that entered a shifted mode completes the
+    // chord; it must not immediately execute that mode's F-button action.
+    else if (functionConsumed_) {
+    } else if (mode_ == Mode::System) {
         if (i == 0)
             systemAccept();
         else if (i == 3) {
