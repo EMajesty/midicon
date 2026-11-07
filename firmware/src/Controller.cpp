@@ -2,7 +2,7 @@
 #include "Persistence.h"
 #include <string.h>
 namespace midicon {
-constexpr uint8_t EA[4] = {5, 11, 17, 25}, EB[4] = {7, 13, 21, 27},
+constexpr uint8_t EA[4] = {5, 11, 17, 25}, EB[4] = {7, 14, 21, 27},
                   EP[4] = {3, 9, 15, 23}, FP[4] = {33, 35, 37, 39};
 constexpr uint8_t COL[4] = {24, 26, 28, 30}, ROW[4] = {41, 43, 45, 47},
                   AP[8] = {A0, A2, A4, A6, A8, A10, A12, A14};

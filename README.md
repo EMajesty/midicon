@@ -12,7 +12,7 @@ Logic voltage: 5 V
 | D7 | E1_B | Encoder 1 channel B |
 | D9 | E2_PB | Encoder 2 push button |
 | D11 | E2_A | Encoder 2 channel A |
-| D13 | E2_B | Encoder 2 channel B |
+| D14 | E2_B | Encoder 2 channel B |
 | D15 | E3_PB | Encoder 3 push button |
 | D17 | E3_A | Encoder 3 channel A |
 | D18 | MIDI_OUT | MIDI output (TX1) |
